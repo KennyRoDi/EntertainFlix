@@ -17,8 +17,8 @@ spring:
 azure:
   storage:
     queue:
-      connection-string: DefaultEndpointsProtocol=https;AccountName=entertainflixstorage;AccountKey=8pR8pxUKaFA8MOwkYp2K6eROKGIIsJCqBjUIIaQXtPVazreu2vDyAPniSwA0ktACsxSeWfuI7m7r+AStEqJM/A==;EndpointSuffix=core.windows.net
-      queue-name: decision-events
+      connection-string: ${AZURE_STORAGE_QUEUE_CONNECTION_STRING}
+      queue-name: ${AZURE_STORAGE_QUEUE_NAME}
 
 security:
   oauth2:
