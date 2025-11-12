@@ -12,17 +12,26 @@ public class RequestDecisionResponseDTO {
     @JsonProperty("requestId")
     private String requestId;
 
-    @JsonProperty("ofertantId")
-    private String ofertantId;
+    @JsonProperty("cliente")
+    private String cliente;
 
-    @JsonProperty("customerId")
-    private String customerId;
+    @JsonProperty("correo")
+    private String correo;
+
+    @JsonProperty("servicio")
+    private String servicio;
+
+    @JsonProperty("paquete")
+    private String paquete;
+
+    @JsonProperty("ofertante")
+    private String ofertante;
 
     @JsonProperty("status")
     private String status;
 
-    @JsonProperty("reason")
-    private String reason;
+    @JsonProperty("razon")
+    private String razon;
 
     @JsonProperty("decidedAt")
     private LocalDateTime decidedAt;
@@ -30,26 +39,32 @@ public class RequestDecisionResponseDTO {
     @JsonProperty("decidedBy")
     private String decidedBy;
 
-    public RequestDecisionResponseDTO() {
-    }
-
     public RequestDecisionResponseDTO(
             UUID id,
             String requestId,
-            String ofertantId,
-            String customerId,
+            String cliente,
+            String correo,
+            String servicio,
+            String paquete,
+            String ofertante,
             String status,
-            String reason,
+            String razon,
             LocalDateTime decidedAt,
             String decidedBy) {
         this.id = id;
         this.requestId = requestId;
-        this.ofertantId = ofertantId;
-        this.customerId = customerId;
+        this.cliente = cliente;
+        this.correo = correo;
+        this.servicio = servicio;
+        this.paquete = paquete;
+        this.ofertante = ofertante;
         this.status = status;
-        this.reason = reason;
+        this.razon = razon;
         this.decidedAt = decidedAt;
         this.decidedBy = decidedBy;
+    }
+
+    public RequestDecisionResponseDTO() {
     }
 
     // Getters and Setters
@@ -69,20 +84,44 @@ public class RequestDecisionResponseDTO {
         this.requestId = requestId;
     }
 
-    public String getOfertantId() {
-        return ofertantId;
+    public String getCliente() {
+        return cliente;
     }
 
-    public void setOfertantId(String ofertantId) {
-        this.ofertantId = ofertantId;
+    public void setCliente(String cliente) {
+        this.cliente = cliente;
     }
 
-    public String getCustomerId() {
-        return customerId;
+    public String getCorreo() {
+        return correo;
     }
 
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public String getServicio() {
+        return servicio;
+    }
+
+    public void setServicio(String servicio) {
+        this.servicio = servicio;
+    }
+
+    public String getPaquete() {
+        return paquete;
+    }
+
+    public void setPaquete(String paquete) {
+        this.paquete = paquete;
+    }
+
+    public String getOfertante() {
+        return ofertante;
+    }
+
+    public void setOfertante(String ofertante) {
+        this.ofertante = ofertante;
     }
 
     public String getStatus() {
@@ -93,12 +132,12 @@ public class RequestDecisionResponseDTO {
         this.status = status;
     }
 
-    public String getReason() {
-        return reason;
+    public String getRazon() {
+        return razon;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setRazon(String razon) {
+        this.razon = razon;
     }
 
     public LocalDateTime getDecidedAt() {

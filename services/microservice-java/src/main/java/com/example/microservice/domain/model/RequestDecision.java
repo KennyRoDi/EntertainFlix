@@ -7,32 +7,51 @@ public class RequestDecision {
 
     private final UUID id;
     private final String requestId;
-    private final String ofertantId;
-    private final String customerId;
+    private final String cliente;
+    private final String correo;
+    private final String telefono;
+    private final String mensaje;
+    private final String ubicacion;
+    private final String servicio;
+    private final String paquete;
+    private final String ofertante;
     private final DecisionStatus status;
-    private final String reason;
+    private final String razon;
     private final LocalDateTime decidedAt;
     private final String decidedBy;
 
     public RequestDecision(
             UUID id,
             String requestId,
-            String ofertantId,
-            String customerId,
+            String cliente,
+            String correo,
+            String telefono,
+            String mensaje,
+            String ubicacion,
+            String servicio,
+            String paquete,
+            String ofertante,
             DecisionStatus status,
-            String reason,
+            String razon,
             LocalDateTime decidedAt,
             String decidedBy) {
         this.id = id;
         this.requestId = requestId;
-        this.ofertantId = ofertantId;
-        this.customerId = customerId;
+        this.cliente = cliente;
+        this.correo = correo;
+        this.telefono = telefono;
+        this.mensaje = mensaje;
+        this.ubicacion = ubicacion;
+        this.servicio = servicio;
+        this.paquete = paquete;
+        this.ofertante = ofertante;
         this.status = status;
-        this.reason = reason;
+        this.razon = razon;
         this.decidedAt = decidedAt;
         this.decidedBy = decidedBy;
     }
 
+    // Getters
     public UUID getId() {
         return id;
     }
@@ -41,20 +60,44 @@ public class RequestDecision {
         return requestId;
     }
 
-    public String getOfertantId() {
-        return ofertantId;
+    public String getCliente() {
+        return cliente;
     }
 
-    public String getCustomerId() {
-        return customerId;
+    public String getCorreo() {
+        return correo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
+
+    public String getUbicacion() {
+        return ubicacion;
+    }
+
+    public String getServicio() {
+        return servicio;
+    }
+
+    public String getPaquete() {
+        return paquete;
+    }
+
+    public String getOfertante() {
+        return ofertante;
     }
 
     public DecisionStatus getStatus() {
         return status;
     }
 
-    public String getReason() {
-        return reason;
+    public String getRazon() {
+        return razon;
     }
 
     public LocalDateTime getDecidedAt() {

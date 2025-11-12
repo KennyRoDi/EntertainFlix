@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/entertainflix_history
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: false
+
+azure:
+  storage:
+    queue:
+      connection-string: DefaultEndpointsProtocol=https;AccountName=entertainflixstorage;AccountKey=8pR8pxUKaFA8MOwkYp2K6eROKGIIsJCqBjUIIaQXtPVazreu2vDyAPniSwA0ktACsxSeWfuI7m7r+AStEqJM/A==;EndpointSuffix=core.windows.net
+      queue-name: decision-events
+
+security:
+  oauth2:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.example.microservice: DEBUG
