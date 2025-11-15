@@ -187,15 +187,16 @@ async function enviarSolicitud() {
     fecha: fechaEvento.value,
     ubicacion: ubicacionSeleccionada.value,
     paquete: paqueteSeleccionado.value,
-    servicioTitulo: props.servicio.titulo,
-    artistaUsuario: props.servicio.titulo,
+    artista: props.servicio.titulo,
   };
 
   try {
-    const response = await fetch("http://localhost:3001/api/solicitudes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevaSolicitud),
+    const response = await fetch("https://entertainflix.azure-api.net/agendarsolicitudes/api/solicitudes", {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevaSolicitud),
     });
 
     if (!response.ok) {
