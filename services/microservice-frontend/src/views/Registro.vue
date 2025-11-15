@@ -96,23 +96,25 @@ import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { useUsers } from "@/composables/useUser.js";
 
+// --- Router para redirección tras registro ---
 const router = useRouter();
 
-// Se llama al composable para usar sus funciones
+// --- Composable de usuarios (maneja registro y estado) ---
 const { registerUser, loading, error } = useUsers();
 
-const nombre = ref("");
-const correo = ref("");
-const usuario = ref("");
-const contraseña = ref("");
-const confirmar = ref("");
-const rol = ref("contratista");
+// --- Campos del formulario ---
+const nombre = ref("");        // Nombre completo del usuario
+const correo = ref("");        // Correo electrónico
+const usuario = ref("");       // Nombre de usuario único
+const contraseña = ref("");    // Contraseña
+const confirmar = ref("");     // Confirmación de contraseña
+const rol = ref("contratista") // Rol asignado por defecto
 
-// La función ahora es async para poder llamar a la API
+// --- Lógica de registro ---
 async function registrarUsuario() {
   error.value = "";
 
-  // 1. Validación de campos vacíos
+  // Validación de campos obligatorios
   if (
     !nombre.value ||
     !correo.value ||
@@ -125,13 +127,13 @@ async function registrarUsuario() {
     return;
   }
 
-  // 2. Validación de contraseñas
+  // Validación de coincidencia de contraseñas
   if (contraseña.value !== confirmar.value) {
     error.value = "Las contraseñas no coinciden.";
     return;
   }
 
-  // 3. Creamos el objeto con los datos del nuevo usuario
+  // Creación del objeto de usuario nuevo
   const nuevoUsuario = {
     nombre: nombre.value,
     correo: correo.value,
@@ -140,21 +142,18 @@ async function registrarUsuario() {
     rol: rol.value,
   };
 
-  // 4. Llamamos a la función del composable dentro de un try-catch
+  // Registro en el sistema
   try {
     await registerUser(nuevoUsuario);
-    // Si tiene éxito, mostramos un mensaje y redirigimos
     alert("¡Registro completado con éxito!");
-    router.push("/inicio-sesion");
+    router.push("/inicio-sesion"); // Redirige a login tras registro exitoso
   } catch (err) {
-    // Si hay un error (ej: usuario ya existe), el composable ya asignó el mensaje a `error.value`
-    // No necesitamos hacer nada más, el <p> en el template lo mostrará.
     console.error("Fallo en el registro desde el componente:", err);
   }
 }
 </script>
+
 <style scoped>
-/* Page wrapper uses theme colors (themes.css) */
 .page {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -163,7 +162,6 @@ async function registrarUsuario() {
   display: block;
 }
 
-/* Card / form background */
 .form-card {
   background-color: var(--color-background-light);
   color: var(--color-text);
@@ -171,12 +169,10 @@ async function registrarUsuario() {
     border-color 180ms ease;
 }
 
-/* Labels */
 .label {
   color: var(--color-text);
 }
 
-/* Inputs & selects & textarea */
 .input {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -188,14 +184,12 @@ async function registrarUsuario() {
     border-color 180ms ease, box-shadow 150ms ease;
 }
 
-/* focus state uses primary button color for accent (adapts to theme) */
 .input:focus {
   outline: none;
   border-color: var(--color-primary-button-bg);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
-/* Primary button */
 .btn-primary {
   background-color: var(--color-primary-button-bg);
   color: var(--color-primary-button-text);
@@ -205,12 +199,10 @@ async function registrarUsuario() {
   text-align: center;
 }
 
-/* slight hover effect */
 .btn-primary:hover {
   opacity: 0.95;
 }
 
-/* Link CTA color (bottom link) */
 .link-cta {
   color: var(--color-primary-button-bg);
   font-weight: 600;
@@ -218,22 +210,15 @@ async function registrarUsuario() {
   margin-left: 0.25rem;
 }
 
-/* muted text uses the theme "light text" variable */
 .muted {
   color: var(--color-text-light);
 }
 
-/* error text (kept in red for clarity) */
 .error {
   color: #ef4444;
 }
 
-/* small accessibility: ensure contrast for headings/strong text */
-h1,
-h2,
-h3,
-h4,
-label,
+h1,h2,h3,h4,label,
 .font-semibold {
   color: var(--color-text);
 }

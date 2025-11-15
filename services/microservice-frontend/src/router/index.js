@@ -6,7 +6,6 @@ import Chat from '../views/Chat.vue'
 import InicioSesion from '../views/InicioSesion.vue'
 import Registro from '../views/Registro.vue'
 import Detalle from '../views/Detalle.vue'
-import Agendar from '../views/Agendar.vue'
 import Perfil from '../views/Perfil.vue'
 import Solicitudes from '../views/Solicitudes.vue'
 import DetallePrevista from '../views/DetallePrevista.vue'
@@ -28,7 +27,6 @@ const routes =
         { path: '/inicio-sesion', name: 'InicioSesion', component: InicioSesion },
         { path: '/registro', name: 'Registro', component: Registro },
         { path: '/detalle/:id', name: 'Detalle', component: Detalle },
-        { path: '/agendar/:id', name: 'Agendar', component: Agendar },
         { path: '/perfil/:usuario', name: 'Perfil', component: Perfil ,
             children: [
                 { path: 'paquetes', name: 'paquetesPerfil', component: paquetesPerfil },

@@ -10,10 +10,14 @@
         >
           <h2 class="text-2xl font-bold text-center mb-4">Iniciar Sesión</h2>
 
-          <!-- Bloque de inicio de sesión social del código antiguo -->
+          <!-- Google Login Button -->
           <div class="space-y-3">
-            <a href="https://white-pebble-0f617fd0f.1.azurestaticapps.net/.auth/login/google/callback"
-              class="w-full btn-social-google py-2 rounded flex items-center justify-center space-x-2">
+            <button
+              @click="handleSocialLogin('google')"
+              type="button"
+              class="w-full btn-social-google py-2 rounded flex items-center justify-center space-x-2"
+              :disabled="loading"
+            >
               <svg viewBox="0 0 48 48" class="w-5 h-5" width="24" height="24">
                 <path fill="#FFC107"
                   d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,19.044-8.136,19.044-19.5C43.044,22.684,43.434,21.319,43.611,20.083z" />
@@ -24,17 +28,13 @@
                 <path fill="#1976D2"
                   d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.08,5.592c3.551-2.329,5.999-6.388,5.999-11.234C39.324,22.382,43.044,21.319,43.611,20.083z" />
               </svg>
-              <span>Continuar con Google</span>
-            </a>
-            <a href="https://white-pebble-0f617fd0f.1.azurestaticapps.net/.auth/login/github/callback"
-              class="w-full btn-social-github py-2 rounded flex items-center justify-center space-x-2">
-              <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" width="24" height="24">
-                <path
-                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.805 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.082-.741.082-.725.082-.725 1.205.082 1.838 1.233 1.838 1.233 1.07 1.835 2.809 1.305 3.496.998.108-.778.418-1.305.762-1.605-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.465-2.381 1.236-3.221-.124-.305-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.046.138 3.003.404 2.293-1.552 3.301-1.23 3.301-1.23.653 1.653.242 2.871.118 3.176.772.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.922.43.37.823 1.102.823 2.222v3.293c0 .319.192.694.8.576C20.562 21.805 24 17.302 24 12c0-6.627-5.373-12-12-12z" />
-              </svg>
-              <span>Continuar con GitHub</span>
-            </a>
+              <span>{{ loading ? 'Procesando...' : 'Continuar con Google' }}</span>
+            </button>
           </div>
+
+          <p v-if="apiMessage" class="mt-2 text-xs text-center p-2 bg-blue-50 text-blue-800 rounded">
+            {{ apiMessage }}
+          </p>
 
           <div class="flex items-center">
             <div class="flex-grow border-t border-gray-300"></div>
@@ -58,10 +58,9 @@
               <input
                 v-model="inputPassword"
                 :type="passwordFieldType"
-                placeholder="********"
+                placeholder=""
                 class="w-full input-field px-4 py-2 rounded pr-10"
               />
-              <!-- Botón para mostrar/ocultar contraseña del código antiguo -->
               <button type="button" @click="showPassword = !showPassword"
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
                 aria-label="Toggle password visibility">
@@ -103,48 +102,207 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { useAuth } from "@/composables/useAuth.js";
 import { useUsers } from "@/composables/useUser.js";
 
+/* Constantes de OAuth / rutas */
+const GOOGLE_CLIENT_ID = "623164831395-ooojq523bftisjcj28ift0cvts7keq0e.apps.googleusercontent.com";
+const REDIRECT_PATH = "/inicio-sesion";
+
+/* Router y estado del formulario */
 const router = useRouter();
 const inputUsuario = ref("");
 const inputPassword = ref("");
 const error = ref("");
-const { login } = useAuth();
-const { users, loadAll, loading } = useUsers();
+const apiMessage = ref("");
+const loading = ref(false);
 
+/* Composables: auth y usuarios */
+const { login } = useAuth();
+const { users, loadAll, registerUser } = useUsers();
+
+/* UI: toggle para mostrar/ocultar contraseña */
 const showPassword = ref(false);
 const passwordFieldType = computed(() =>
   showPassword.value ? "text" : "password"
 );
 
+/* Ejecutar al montar: manejar posible redirect de Google */
+onMounted(() => {
+  handleGoogleRedirect();
+});
+
+/* -------------------------------
+   Utilidades
+   ------------------------------- */
+
+/* Decodifica un JWT (id_token) y devuelve el payload como objeto */
+function decodeJWT(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decoding JWT:', e);
+    return null;
+  }
+}
+
+/* Genera un nombre de usuario aleatorio a partir del email (para cuentas creadas vía Google) */
+function generateUsername(email) {
+  const baseName = email.split('@')[0];
+  const randomNum = Math.floor(Math.random() * 9999);
+  return `${baseName}${randomNum}`;
+}
+
+/* -------------------------------
+   Google OAuth (social login)
+   ------------------------------- */
+
+/* Inicia el flujo OAuth redirigiendo a Google */
+function handleSocialLogin(provider) {
+  if (provider === 'google') {
+    const redirectUri = window.location.origin + REDIRECT_PATH;
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const nonce = crypto.randomUUID();
+    
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'id_token',
+      scope: 'openid email profile',
+      nonce: nonce,
+    });
+    
+    window.location.href = `${authUrl}?${params.toString()}`;
+  }
+}
+
+/*
+  Maneja el redirect desde Google: si llega un id_token en el hash,
+  decodifica el token, verifica si el usuario existe y lo loguea;
+  si no existe, lo registra (registerUser) y luego lo loguea.
+*/
+async function handleGoogleRedirect() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const idToken = params.get('id_token');
+
+  if (idToken) {
+    loading.value = true;
+    apiMessage.value = "Procesando tu inicio de sesión con Google...";
+    
+    try {
+      const userInfo = decodeJWT(idToken);
+      if (!userInfo || !userInfo.email) {
+        throw new Error('No se pudo obtener la información del usuario');
+      }
+      localStorage.setItem('google_id_token', idToken);
+      await loadAll();
+      let existingUser = users.value.find(u => u.correo === userInfo.email);
+      
+      if (existingUser) {
+        apiMessage.value = "¡Bienvenido de nuevo!";
+        login({
+          id: existingUser.id,
+          nombre: existingUser.nombre,
+          usuario: existingUser.usuario,
+          rol: existingUser.rol,
+          correo: existingUser.correo
+        });
+        
+        router.replace({ path: '/' });
+      } else {
+        apiMessage.value = "Creando tu cuenta...";
+        
+        const newUser = {
+          nombre: userInfo.name || userInfo.email.split('@')[0],
+          correo: userInfo.email,
+          usuario: generateUsername(userInfo.email),
+          contraseña: crypto.randomUUID(), 
+          rol: 'contratista', 
+          googleId: userInfo.sub, 
+        };
+        
+        await registerUser(newUser);
+        
+        await loadAll();
+        const createdUser = users.value.find(u => u.correo === userInfo.email);
+        
+        if (createdUser) {
+          apiMessage.value = "¡Cuenta creada! Bienvenido.";
+          login({
+            id: createdUser.id,
+            nombre: createdUser.nombre,
+            usuario: createdUser.usuario,
+            rol: createdUser.rol,
+            correo: createdUser.correo
+          });
+          
+          router.replace({ path: '/' });
+        }
+      }
+    } catch (err) {
+      console.error('Error en autenticación de Google:', err);
+      error.value = "Error al iniciar sesión con Google. Por favor, intenta de nuevo.";
+      apiMessage.value = "";
+      // Clean up the URL
+      router.replace({ path: REDIRECT_PATH });
+    } finally {
+      loading.value = false;
+    }
+  }
+}
+
+/* -------------------------------
+   Login estándar (usuario + contraseña)
+   ------------------------------- */
+
+/* Intenta iniciar sesión comparando usuario/email + contraseña contra el listado de users */
 async function iniciarSesion() {
   error.value = "";
-  await loadAll();
+  loading.value = true;
+  
+  try {
+    await loadAll();
 
-  const usuarioEncontrado = users.value.find(
-    (u) =>
-      (u.usuario === inputUsuario.value || u.correo === inputUsuario.value) &&
-      u.contraseña === inputPassword.value
-  );
+    const usuarioEncontrado = users.value.find(
+      (u) =>
+        (u.usuario === inputUsuario.value || u.correo === inputUsuario.value) &&
+        u.contraseña === inputPassword.value
+    );
 
-  if (usuarioEncontrado) {
-    login({
-      id: usuarioEncontrado.id,
-      nombre: usuarioEncontrado.nombre,
-      usuario: usuarioEncontrado.usuario,
-      rol: usuarioEncontrado.rol,
-    });
-    router.push("/");
-  } else {
-    error.value = "Credenciales inválidas. Verifica tu usuario y contraseña.";
+    if (usuarioEncontrado) {
+      login({
+        id: usuarioEncontrado.id,
+        nombre: usuarioEncontrado.nombre,
+        usuario: usuarioEncontrado.usuario,
+        rol: usuarioEncontrado.rol,
+        correo: usuarioEncontrado.correo
+      });
+      router.push("/");
+    } else {
+      error.value = "Credenciales inválidas. Verifica tu usuario y contraseña.";
+    }
+  } catch (err) {
+    console.error('Error en inicio de sesión:', err);
+    error.value = "Error al iniciar sesión. Por favor, intenta de nuevo.";
+  } finally {
+    loading.value = false;
   }
 }
 </script>
+
 
 <style scoped>
 .page {
@@ -189,8 +347,13 @@ async function iniciarSesion() {
   cursor: pointer;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   filter: brightness(0.9);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .meta-text {
@@ -208,11 +371,6 @@ async function iniciarSesion() {
   text-decoration: underline;
 }
 
-input.rounded,
-.input-field.rounded {
-  border-radius: 0.375rem;
-}
-
 .btn-social-google {
   background-color: white;
   color: #444;
@@ -221,22 +379,12 @@ input.rounded,
   transition: background-color 120ms ease;
 }
 
-.btn-social-google:hover {
+.btn-social-google:hover:not(:disabled) {
   background-color: #f0f0f0;
 }
 
-.btn-social-github {
-  background-color: #24292e;
-  color: white;
-  font-weight: 500;
-  transition: background-color 120ms ease;
-}
-
-.btn-social-github:hover {
-  background-color: #33383d;
-}
-
-.btn-social-github svg {
-  color: white;
+.btn-social-google:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

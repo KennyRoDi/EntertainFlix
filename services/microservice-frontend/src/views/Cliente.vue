@@ -48,9 +48,14 @@ import Footer from '@/components/Footer.vue'
 import solicitudesBase from '@/assets/json/solicitudes.json'
 import { useAuth } from '@/composables/useAuth.js'
 
+/* Auth y estado local */
+// obtenemos el usuario logueado
 const { usuario } = useAuth()
+// solicitudes creadas por el usuario guardadas en localStorage
 const nuevasSolicitudes = ref(JSON.parse(localStorage.getItem('nuevasSolicitudes') || '[]'))
 
+/* Computed: solicitudes del cliente */
+// combina las solicitudes estáticas con las nuevas del localStorage que coinciden con el usuario
 const solicitudesDelCliente = computed(() => {
     if (!usuario.value) return []
     const base = solicitudesBase.filter(s => s.cliente?.toLowerCase() === usuario.value.nombre.toLowerCase())
@@ -58,14 +63,16 @@ const solicitudesDelCliente = computed(() => {
     return [...base, ...nuevas]
 })
 
+/* Acción: cancelar solicitud */
+// recibe el índice en la lista combinada; ajusta restando la longitud de la base y elimina de nuevasSolicitudes
 function cancelarSolicitud(index) {
     nuevasSolicitudes.value.splice(index - solicitudesBase.length, 1)
     localStorage.setItem('nuevasSolicitudes', JSON.stringify(nuevasSolicitudes.value))
 }
 </script>
 
+
 <style scoped>
-/* Page wrapper uses theme variables from themes.css */
 .page {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -81,17 +88,14 @@ function cancelarSolicitud(index) {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-/* Profile image border uses footer text color */
 .profile-img {
   border: 3px solid var(--color-footer-text);
 }
 
-/* General "main" text (used instead of text-gray-700) */
 .text-main {
   color: var(--color-text);
 }
 
-/* muted and small-muted text */
 .muted {
   color: var(--color-text-light);
   transition: color 180ms ease;
@@ -101,7 +105,6 @@ function cancelarSolicitud(index) {
   font-size: 0.875rem;
 }
 
-/* Request / solicitation card */
 .request-card {
   background-color: var(--color-background-light);
   color: var(--color-text);
@@ -109,7 +112,6 @@ function cancelarSolicitud(index) {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-/* Danger / cancel button */
 .btn-danger {
   background-color: #dc2626;
   color: #fff;
@@ -123,7 +125,6 @@ function cancelarSolicitud(index) {
   background-color: #b91c1c;
 }
 
-/* Images */
 .img-cover, .profile-img {
   object-fit: cover;
 }

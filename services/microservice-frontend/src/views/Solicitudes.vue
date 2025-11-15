@@ -33,24 +33,28 @@
 </template>
 
 <script setup>
+// Importamos funciones y componentes necesarios
 import { ref, computed } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
 import solicitudesData from '@/assets/json/solicitudes.json'
 import { useAuth } from '@/composables/useAuth.js'
 
+// Obtenemos el usuario actual desde el sistema de autenticación
 const { usuario } = useAuth()
 
+// Cargamos todas las solicitudes desde el archivo JSON
 const todasLasSolicitudes = ref(solicitudesData)
 
+// Computed que filtra las solicitudes y devuelve solo las del usuario logueado
 const solicitudes = computed(() => {
-    if (!usuario.value) return []
-    return todasLasSolicitudes.value.filter(s => s.oferente === usuario.value.usuario)
+  if (!usuario.value) return [] // Si no hay usuario, no mostramos nada
+  return todasLasSolicitudes.value.filter(s => s.oferente === usuario.value.usuario)
 })
 </script>
 
+
 <style scoped>
-/* Página: usa variables del themes.css */
 .page {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -58,7 +62,6 @@ const solicitudes = computed(() => {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
-/* Tarjeta genérica para cada solicitud */
 .card {
   background-color: var(--color-background-light);
   color: var(--color-text);
@@ -66,18 +69,15 @@ const solicitudes = computed(() => {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-/* Texto principal (antes text-gray-700) */
 .text-main {
   color: var(--color-text);
 }
 
-/* Muted / secundario (antes text-gray-500) */
 .muted, .small-muted {
   color: var(--color-text-light);
   transition: color 180ms ease;
 }
 
-/* Botón aceptar (mantengo verde para claridad) */
 .accept-btn {
   background-color: #16a34a;
   color: #ffffff;
@@ -87,7 +87,6 @@ const solicitudes = computed(() => {
 }
 .accept-btn:hover { background-color: #15803d; }
 
-/* Botón rechazar (mantengo rojo para claridad) */
 .reject-btn {
   background-color: #dc2626;
   color: #ffffff;
@@ -97,12 +96,10 @@ const solicitudes = computed(() => {
 }
 .reject-btn:hover { background-color: #b91c1c; }
 
-/* Asegurar contraste en headings */
 h2, h3 {
   color: var(--color-text);
 }
 
-/* Accesibilidad: foco visible */
 button:focus, a:focus {
   outline: 3px solid rgba(0,0,0,0.06);
   outline-offset: 2px;

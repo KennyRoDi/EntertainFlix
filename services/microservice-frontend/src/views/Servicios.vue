@@ -90,6 +90,7 @@
 </template>
 
 <script setup>
+// Importamos funciones y componentes necesarios de Vue y del proyecto
 import { ref, computed, onMounted } from 'vue';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
@@ -97,47 +98,53 @@ import ServiceCard from '@/components/ServiceCard.vue';
 import { useServices } from '@/composables/useServices.js';
 import { useCategories } from '@/composables/useCategories.js';
 
-// --- ESTADO Y COMPOSABLES ---
-// Llama a los composables para obtener los datos y estados
+// Obtenemos servicios y categorías desde los composables
 const { services, loadAll: loadAllServices, loading: loadingServices, error: errorServices } = useServices();
 const { categories, loadAll: loadAllCategories, loading: loadingCategories, error: errorCategories } = useCategories();
 
-// Estados para los filtros y la UI
+// Estados locales para mostrar/ocultar filtros y búsqueda
 const showFilters = ref(false);
 const showSearch = ref(false);
+
+// Variables reactivas para filtros y búsqueda
 const searchQuery = ref('');
 const filtroCategoria = ref('');
 const filtroUbicacion = ref('');
-const precioMax = ref(10000);
+const precioMax = ref(10000); // Límite máximo de precio por defecto
 
-// Estados combinados para una UX más simple
+// Estado global de carga y error combinando servicios y categorías
 const isLoading = computed(() => loadingServices.value || loadingCategories.value);
 const error = computed(() => errorServices.value || errorCategories.value);
 
-// --- PROPIEDADES COMPUTADAS ---
-// La lógica de estas funciones no cambia, ya que operan sobre los 'refs' que ahora vienen de los composables
+// Computed para obtener todas las ubicaciones disponibles desde los servicios
 const ubicacionesDisponibles = computed(() => {
   if (!services.value) return [];
   const locations = new Set(services.value.map(s => s.ubicacion));
   return Array.from(locations).sort();
 });
 
+// Computed que devuelve la lista de servicios filtrados según los criterios
 const serviciosFiltrados = computed(() => {
   if (!services.value) return [];
   return services.value.filter(s => {
+    // Normalizamos strings para búsqueda
     const tituloLower = s.titulo ? s.titulo.toLowerCase() : '';
     const ubicacionLower = s.ubicacion ? s.ubicacion.toLowerCase() : '';
 
+    // Condiciones de filtrado
     const coincideBusqueda = tituloLower.includes(searchQuery.value.toLowerCase());
     const coincideCategoria = filtroCategoria.value ? s.categoria === filtroCategoria.value : true;
     const coincideUbicacion = filtroUbicacion.value ? ubicacionLower === filtroUbicacion.value.toLowerCase() : true;
-    const coincidePrecio = s.paquetes && Array.isArray(s.paquetes) ? s.paquetes.some(p => p.precio <= precioMax.value) : true;
+    const coincidePrecio = s.paquetes && Array.isArray(s.paquetes) 
+      ? s.paquetes.some(p => p.precio <= precioMax.value) 
+      : true;
 
+    // Retorna solo los servicios que cumplen con todos los filtros
     return coincideBusqueda && coincideCategoria && coincideUbicacion && coincidePrecio;
   });
 });
 
-// --- FUNCIONES (sin cambios) ---
+// Funciones para alternar visibilidad de filtros y búsqueda
 function toggleFilters() {
   showFilters.value = !showFilters.value;
 }
@@ -146,13 +153,13 @@ function toggleSearch() {
   showSearch.value = !showSearch.value;
 }
 
-// --- CICLO DE VIDA ---
-// onMounted ahora carga todos los datos necesarios desde la API
+// Al montar el componente cargamos servicios y categorías
 onMounted(() => {
   loadAllServices();
   loadAllCategories();
 });
 </script>
+
 
 <style scoped>
 .page {

@@ -88,7 +88,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue' // Importa computed
+/* Importaciones */
+import { ref, computed, onMounted } from 'vue' 
 import { RouterLink } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
@@ -99,20 +100,25 @@ import { useCategories } from '@/composables/useCategories.js'
 import { useServices } from '@/composables/useServices.js'
 import Banner from '../components/Banner.vue'
 
+/* Composables y estado */
 const { categories, loading: loadingCategories, error: errorCategories, loadAll: loadAllCategories } = useCategories()
 const { services, loading: loadingServices, error: errorServices, loadAll: loadAllServices } = useServices()
 
+/* Computed: servicios destacados (los primeros 3) */
 const destacados = computed(() => {
   return services.value.slice(0, 3)
 })
-// Carga todos los datos necesarios cuando el componente se monta
+
+/* Ciclo de vida: cargar categorías y servicios al montar */
 onMounted(() => {
   loadAllCategories()
   loadAllServices()
 })
-// Mantiene los datos locales para la sección de comentarios
+
+/* Datos estáticos: comentarios cargados desde JSON */
 const comentarios = ref(comentariosData)
 </script>
+
 
 <style scoped>
 .page {
