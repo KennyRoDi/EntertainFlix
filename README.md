@@ -10,14 +10,13 @@ La plataforma garantiza un flujo de trabajo asistido, desde la gestión de perfi
 
 ## Instrucciones de despliegue local.
 
-**Clonar el repositorio**
+**Clonar el repositorio y moverse a la raiz**
 ```bash
-git clone https://github.com/KennyRoDi/Dise-oSoftware.git
+git clone https://github.com/KennyRoDi/EntertainFlix.git
 
-cd Entertainflix
-cd services
-cd microservice-frontend
+cd Entertainflix/services/microservice-frontend
 ```
+
 **Instalar dependencias**
 ```bash
 npm install
