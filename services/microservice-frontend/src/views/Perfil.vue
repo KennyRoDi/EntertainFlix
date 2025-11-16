@@ -68,6 +68,9 @@
 
     <PackageModal v-if="mostrarModal" :paquete="paqueteEditable" :is-editing="editandoIndex !== null"
       @close="cerrarModal" @save="guardarPaquete" />
+
+    <!-- Add this after PackageModal -->
+    <ConfirmDialog ref="confirmDialog" />
   </div>
 </template>
 
@@ -77,6 +80,7 @@ import { useRoute } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import PackageModal from "@/components/PackageModal.vue";
+import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import { useProfiles } from "@/composables/useArtist.js";
 import { useServices } from "@/composables/useServices.js";
 import comentariosData from "@/assets/json/comentarios.json";
@@ -113,6 +117,7 @@ const notificationMessage = ref("");
 const mostrarModal = ref(false);
 const paqueteEditable = ref({ nombre: "", descripcion: "", precio: null });
 const editandoIndex = ref(null);
+const confirmDialog = ref(null);
 
 // Computed
 const isLoading = computed(
@@ -218,9 +223,14 @@ async function aceptarSolicitud(solicitudId) {
   const solicitud = todasLasSolicitudes.value.find((s) => s.id === solicitudId);
   if (!solicitud) return;
 
-  if (!confirm(`¿Deseas aceptar la solicitud de ${solicitud.cliente}?`)) {
-    return;
-  }
+  const confirmed = await confirmDialog.value.show({
+    title: "Aceptar solicitud",
+    message: `¿Deseas aceptar la solicitud de ${solicitud.cliente}?`,
+    confirmText: "Aceptar",
+    type: "success"
+  });
+
+  if (!confirmed) return;
 
   try {
     await callMicroservice(solicitud, "ACCEPTED");
@@ -251,9 +261,14 @@ async function rechazarSolicitud(solicitudId) {
   const solicitud = todasLasSolicitudes.value.find((s) => s.id === solicitudId);
   if (!solicitud) return;
 
-  if (!confirm(`¿Deseas rechazar la solicitud de ${solicitud.cliente}?`)) {
-    return;
-  }
+  const confirmed = await confirmDialog.value.show({
+    title: "Rechazar solicitud",
+    message: `¿Deseas rechazar la solicitud de ${solicitud.cliente}?`,
+    confirmText: "Rechazar",
+    type: "danger"
+  });
+
+  if (!confirmed) return;
 
   try {
     await callMicroservice(solicitud, "REJECTED");
