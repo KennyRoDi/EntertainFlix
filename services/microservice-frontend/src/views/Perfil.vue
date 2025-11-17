@@ -388,12 +388,26 @@ watch(
   { immediate: true }
 );
 
-onMounted(() => {
-  todasLasSolicitudes.value = solicitudesData.map((sol) => ({
-    ...sol,
-    estado: "pendiente",
-    id: sol.id || Date.now() + Math.random().toString(36).substr(2, 9)
-  }));
+import { fetchSolicitudes } from "@/services/solicitudesService.js";
+
+onMounted(async () => {
+  try {
+    const solicitudes = await fetchSolicitudes();
+    todasLasSolicitudes.value = solicitudes.map((sol) => ({
+      ...sol,
+      servicio: sol.artista || sol.servicio, // Map 'artista' to 'servicio'
+      estado: sol.estado || "pendiente",
+      id: sol.id
+    }));
+    console.log("Loaded solicitudes:", todasLasSolicitudes.value); // Debug
+  } catch (error) {
+    console.error("Failed to load solicitudes:", error);
+    todasLasSolicitudes.value = solicitudesData.map((sol) => ({
+      ...sol,
+      estado: "pendiente",
+      id: sol.id || Date.now() + Math.random().toString(36).substr(2, 9)
+    }));
+  }
 });
 </script>
 
