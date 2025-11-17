@@ -4,20 +4,14 @@
 
     <main class="flex-grow flex justify-center items-center px-4 py-16">
       <div class="w-full max-w-md">
-        <form
-          @submit.prevent="iniciarSesion"
-          class="form-card shadow rounded p-6 space-y-4"
-        >
+        <form @submit.prevent="iniciarSesion" class="form-card shadow rounded p-6 space-y-4">
           <h2 class="text-2xl font-bold text-center mb-4">Iniciar Sesión</h2>
 
           <!-- Google Login Button -->
           <div class="space-y-3">
-            <button
-              @click="handleSocialLogin('google')"
-              type="button"
+            <button @click="handleSocialLogin('google')" type="button"
               class="w-full btn-social-google py-2 rounded flex items-center justify-center space-x-2"
-              :disabled="loading"
-            >
+              :disabled="loading">
               <svg viewBox="0 0 48 48" class="w-5 h-5" width="24" height="24">
                 <path fill="#FFC107"
                   d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,19.044-8.136,19.044-19.5C43.044,22.684,43.434,21.319,43.611,20.083z" />
@@ -44,23 +38,15 @@
 
           <div>
             <label class="block text-sm font-semibold mb-1">Correo o Usuario</label>
-            <input
-              v-model="inputUsuario"
-              type="text"
-              placeholder="usuario@correo.com"
-              class="w-full input-field px-4 py-2 rounded"
-            />
+            <input v-model="inputUsuario" type="text" placeholder="usuario@correo.com"
+              class="w-full input-field px-4 py-2 rounded" />
           </div>
 
           <div>
             <label class="block text-sm font-semibold mb-1">Contraseña</label>
             <div class="relative">
-              <input
-                v-model="inputPassword"
-                :type="passwordFieldType"
-                placeholder=""
-                class="w-full input-field px-4 py-2 rounded pr-10"
-              />
+              <input v-model="inputPassword" :type="passwordFieldType" placeholder=""
+                class="w-full input-field px-4 py-2 rounded pr-10" />
               <button type="button" @click="showPassword = !showPassword"
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
                 aria-label="Toggle password visibility">
@@ -81,11 +67,7 @@
 
           <p v-if="error" class="error-text text-sm text-center">{{ error }}</p>
 
-          <button
-            type="submit"
-            class="w-full btn-primary py-2 rounded"
-            :disabled="loading"
-          >
+          <button type="submit" class="w-full btn-primary py-2 rounded" :disabled="loading">
             {{ loading ? "Verificando..." : "Iniciar Sesión" }}
           </button>
 
@@ -95,6 +77,7 @@
           </div>
         </form>
       </div>
+      <RoleSelectionModal ref="roleModal" />
     </main>
 
     <Footer />
@@ -106,41 +89,52 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import RoleSelectionModal from "@/components/RoleSelectionModal.vue";
 import { useAuth } from "@/composables/useAuth.js";
 import { useUsers } from "@/composables/useUser.js";
+import { loginUser, googleLogin } from "@/services/authService.js";
 
-/* Constantes de OAuth / rutas */
 const GOOGLE_CLIENT_ID = "623164831395-ooojq523bftisjcj28ift0cvts7keq0e.apps.googleusercontent.com";
 const REDIRECT_PATH = "/inicio-sesion";
 
-/* Router y estado del formulario */
 const router = useRouter();
 const inputUsuario = ref("");
 const inputPassword = ref("");
 const error = ref("");
 const apiMessage = ref("");
 const loading = ref(false);
-
-/* Composables: auth y usuarios */
-const { login } = useAuth();
-const { users, loadAll, registerUser } = useUsers();
-
-/* UI: toggle para mostrar/ocultar contraseña */
 const showPassword = ref(false);
+
+const { login, setToken } = useAuth();
+const { registerUser } = useUsers();
+const roleModal = ref(null);
+
 const passwordFieldType = computed(() =>
   showPassword.value ? "text" : "password"
 );
 
-/* Ejecutar al montar: manejar posible redirect de Google */
 onMounted(() => {
   handleGoogleRedirect();
 });
 
-/* -------------------------------
-   Utilidades
-   ------------------------------- */
+function handleSocialLogin(provider) {
+  if (provider === 'google') {
+    const redirectUri = window.location.origin + REDIRECT_PATH;
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const nonce = crypto.randomUUID();
 
-/* Decodifica un JWT (id_token) y devuelve el payload como objeto */
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'id_token',
+      scope: 'openid email profile',
+      nonce: nonce,
+    });
+
+    window.location.href = `${authUrl}?${params.toString()}`;
+  }
+}
+
 function decodeJWT(token) {
   try {
     const base64Url = token.split('.')[1];
@@ -158,41 +152,6 @@ function decodeJWT(token) {
   }
 }
 
-/* Genera un nombre de usuario aleatorio a partir del email (para cuentas creadas vía Google) */
-function generateUsername(email) {
-  const baseName = email.split('@')[0];
-  const randomNum = Math.floor(Math.random() * 9999);
-  return `${baseName}${randomNum}`;
-}
-
-/* -------------------------------
-   Google OAuth (social login)
-   ------------------------------- */
-
-/* Inicia el flujo OAuth redirigiendo a Google */
-function handleSocialLogin(provider) {
-  if (provider === 'google') {
-    const redirectUri = window.location.origin + REDIRECT_PATH;
-    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    const nonce = crypto.randomUUID();
-    
-    const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: redirectUri,
-      response_type: 'id_token',
-      scope: 'openid email profile',
-      nonce: nonce,
-    });
-    
-    window.location.href = `${authUrl}?${params.toString()}`;
-  }
-}
-
-/*
-  Maneja el redirect desde Google: si llega un id_token en el hash,
-  decodifica el token, verifica si el usuario existe y lo loguea;
-  si no existe, lo registra (registerUser) y luego lo loguea.
-*/
 async function handleGoogleRedirect() {
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
@@ -201,62 +160,59 @@ async function handleGoogleRedirect() {
   if (idToken) {
     loading.value = true;
     apiMessage.value = "Procesando tu inicio de sesión con Google...";
-    
+
     try {
       const userInfo = decodeJWT(idToken);
       if (!userInfo || !userInfo.email) {
         throw new Error('No se pudo obtener la información del usuario');
       }
-      localStorage.setItem('google_id_token', idToken);
-      await loadAll();
-      let existingUser = users.value.find(u => u.correo === userInfo.email);
-      
-      if (existingUser) {
-        apiMessage.value = "¡Bienvenido de nuevo!";
-        login({
-          id: existingUser.id,
-          nombre: existingUser.nombre,
-          usuario: existingUser.usuario,
-          rol: existingUser.rol,
-          correo: existingUser.correo
-        });
-        
-        router.replace({ path: '/' });
-      } else {
-        apiMessage.value = "Creando tu cuenta...";
-        
-        const newUser = {
-          nombre: userInfo.name || userInfo.email.split('@')[0],
-          correo: userInfo.email,
-          usuario: generateUsername(userInfo.email),
-          contraseña: crypto.randomUUID(), 
-          rol: 'contratista', 
-          googleId: userInfo.sub, 
-        };
-        
-        await registerUser(newUser);
-        
-        await loadAll();
-        const createdUser = users.value.find(u => u.correo === userInfo.email);
-        
-        if (createdUser) {
-          apiMessage.value = "¡Cuenta creada! Bienvenido.";
-          login({
-            id: createdUser.id,
-            nombre: createdUser.nombre,
-            usuario: createdUser.usuario,
-            rol: createdUser.rol,
-            correo: createdUser.correo
-          });
-          
-          router.replace({ path: '/' });
-        }
+
+      // Show role selection modal
+      const roleSelection = await roleModal.value.show();
+
+      if (!roleSelection) {
+        // User cancelled
+        router.replace({ path: REDIRECT_PATH });
+        return;
       }
+
+      apiMessage.value = "Creando tu cuenta...";
+
+      // Register new user with selected role and data
+      const newUser = {
+        nombre: userInfo.name || userInfo.email.split('@')[0],
+        correo: userInfo.email,
+        usuario: `user_${Math.random().toString(36).substr(2, 9)}`,
+        contraseña: crypto.randomUUID(),
+        rol: roleSelection.rol,
+        googleId: userInfo.sub,
+        ...(roleSelection.rol === 'oferente' && {
+          categoria: roleSelection.categoria,
+          descripcion: roleSelection.descripcion,
+          ubicacion: roleSelection.ubicacion,
+          telefono: roleSelection.telefono,
+          imagen: "default.jpg",
+          paquetes: []
+        })
+      };
+
+      await registerUser(newUser);
+
+      // Login
+      apiMessage.value = "¡Cuenta creada! Bienvenido.";
+      setToken(idToken);
+      login({
+        nombre: newUser.nombre,
+        usuario: newUser.usuario,
+        rol: newUser.rol,
+        correo: newUser.correo
+      });
+
+      router.replace({ path: '/' });
     } catch (err) {
-      console.error('Error en autenticación de Google:', err);
-      error.value = "Error al iniciar sesión con Google. Por favor, intenta de nuevo.";
+      console.error('Google auth error:', err);
+      error.value = "Error al iniciar sesión con Google.";
       apiMessage.value = "";
-      // Clean up the URL
       router.replace({ path: REDIRECT_PATH });
     } finally {
       loading.value = false;
@@ -264,45 +220,26 @@ async function handleGoogleRedirect() {
   }
 }
 
-/* -------------------------------
-   Login estándar (usuario + contraseña)
-   ------------------------------- */
-
-/* Intenta iniciar sesión comparando usuario/email + contraseña contra el listado de users */
 async function iniciarSesion() {
   error.value = "";
   loading.value = true;
-  
+
   try {
-    await loadAll();
+    const response = await loginUser(inputUsuario.value, inputPassword.value);
 
-    const usuarioEncontrado = users.value.find(
-      (u) =>
-        (u.usuario === inputUsuario.value || u.correo === inputUsuario.value) &&
-        u.contraseña === inputPassword.value
-    );
-
-    if (usuarioEncontrado) {
-      login({
-        id: usuarioEncontrado.id,
-        nombre: usuarioEncontrado.nombre,
-        usuario: usuarioEncontrado.usuario,
-        rol: usuarioEncontrado.rol,
-        correo: usuarioEncontrado.correo
-      });
+    if (response.token && response.user) {
+      setToken(response.token);
+      login(response.user);
       router.push("/");
-    } else {
-      error.value = "Credenciales inválidas. Verifica tu usuario y contraseña.";
     }
   } catch (err) {
-    console.error('Error en inicio de sesión:', err);
-    error.value = "Error al iniciar sesión. Por favor, intenta de nuevo.";
+    console.error('Login error:', err);
+    error.value = "Credenciales inválidas.";
   } finally {
     loading.value = false;
   }
 }
 </script>
-
 
 <style scoped>
 .page {

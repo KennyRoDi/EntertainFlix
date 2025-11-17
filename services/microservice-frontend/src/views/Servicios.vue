@@ -36,7 +36,7 @@
               <span
                 v-for="cat in categories"
                 :key="cat.nombre"
-                @click="filtroCategoria = filtroCategoria === cat.nombre ? '' : cat.nombre"
+                @click="filtroCategoria = (filtroCategoria === cat.nombre ? '' : cat.nombre)"
                 class="chip px-4 py-2 rounded-full text-sm cursor-pointer transition"
                 :class="{ 'chip-active': filtroCategoria === cat.nombre }"
               >
@@ -54,7 +54,9 @@
               step="100"
               class="w-full range-input"
             />
-            <p class="text-sm muted">Hasta <span class="font-bold strong-text">${{ precioMax }}</span></p>
+            <p class="text-sm muted">
+              Hasta <span class="font-bold strong-text">${{ precioMax }}</span>
+            </p>
           </div>
           <div>
             <h3 class="font-semibold mb-2 text-lg strong-text">Filtrar por Ubicación</h3>
@@ -62,9 +64,9 @@
               <span
                 v-for="ubi in ubicacionesDisponibles"
                 :key="ubi"
-                @click="filtroUbicacion = filtroUbicacion === ubi ? '' : ubi"
+                @click="filtroUbicacion = (filtroUbicacion === ubi ? '' : ubi)"
                 class="chip px-4 py-2 rounded-full text-sm cursor-pointer transition"
-                :class="{'chip-active': filtroUbicacion === ubi }"
+                :class="{ 'chip-active': filtroUbicacion === ubi }"
               >
                 {{ ubi }}
               </span>
@@ -72,13 +74,44 @@
           </div>
         </div>
 
-        <div v-if="serviciosFiltrados.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          <ServiceCard
-            v-for="serv in serviciosFiltrados"
-            :key="serv.id"
-            :servicio="serv"
-          />
+        <div v-if="serviciosFiltrados.length > 0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <ServiceCard
+              v-for="serv in serviciosPaginados"
+              :key="serv.id"
+              :servicio="serv"
+            />
+          </div>
+
+          <!-- mini resumen -->
+          <p class="text-sm muted mt-4">
+            Mostrando {{ serviciosPaginados.length }} de {{ total }} resultados
+          </p>
+
+          <!-- Controles de paginación -->
+          <div class="flex items-center gap-3 justify-center mt-6 select-none">
+            <button
+              class="btn-plain px-3 py-2 rounded border"
+              @click="page = Math.max(1, page - 1)"
+              :disabled="page === 1"
+          >
+              Anterior
+          </button>
+
+          <span class="muted">
+            Página {{ page }} de {{ totalPages }}
+          </span>
+
+          <button
+            class="btn-plain px-3 py-2 rounded border"
+            @click="page = Math.min(totalPages, page + 1)"
+            :disabled="page >= totalPages"
+          >
+            Siguiente
+          </button>
+          </div>
         </div>
+
         <div v-else class="text-center muted text-lg py-10">
           <p>No se encontraron servicios que coincidan con los criterios de búsqueda y filtros.</p>
           <p class="mt-2">Intenta ajustar tus selecciones.</p>
@@ -90,61 +123,86 @@
 </template>
 
 <script setup>
-// Importamos funciones y componentes necesarios de Vue y del proyecto
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
 import ServiceCard from '@/components/ServiceCard.vue';
 import { useServices } from '@/composables/useServices.js';
 import { useCategories } from '@/composables/useCategories.js';
 
-// Obtenemos servicios y categorías desde los composables
+// --- ESTADO Y COMPOSABLES ---
+// Llama a los composables para obtener los datos y estados
 const { services, loadAll: loadAllServices, loading: loadingServices, error: errorServices } = useServices();
 const { categories, loadAll: loadAllCategories, loading: loadingCategories, error: errorCategories } = useCategories();
 
-// Estados locales para mostrar/ocultar filtros y búsqueda
+// Estados para los filtros y la UI
 const showFilters = ref(false);
 const showSearch = ref(false);
-
-// Variables reactivas para filtros y búsqueda
 const searchQuery = ref('');
 const filtroCategoria = ref('');
 const filtroUbicacion = ref('');
-const precioMax = ref(10000); // Límite máximo de precio por defecto
+const precioMax = ref(10000);
 
-// Estado global de carga y error combinando servicios y categorías
+// Estados para la paginacion
+const page = ref(1);       // página actual (1, 2, 3, ...)
+const pageSize = ref(4);   // cantidad de items por página (podés cambiar 8 por 12, etc.)
+
+const total = computed(() => serviciosFiltrados.value.length);
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(total.value / pageSize.value));
+});
+
+// El slice que muestra solo "el pedacito" de la página actual
+const serviciosPaginados = computed(() => {
+  const start = (page.value - 1) * pageSize.value;
+  return serviciosFiltrados.value.slice(start, start + pageSize.value);
+});
+
+
+// Estados combinados para una UX más simple
 const isLoading = computed(() => loadingServices.value || loadingCategories.value);
 const error = computed(() => errorServices.value || errorCategories.value);
 
-// Computed para obtener todas las ubicaciones disponibles desde los servicios
+// --- PROPIEDADES COMPUTADAS ---
+// La lógica de estas funciones no cambia, ya que operan sobre los 'refs' que ahora vienen de los composables
 const ubicacionesDisponibles = computed(() => {
   if (!services.value) return [];
   const locations = new Set(services.value.map(s => s.ubicacion));
   return Array.from(locations).sort();
 });
 
-// Computed que devuelve la lista de servicios filtrados según los criterios
 const serviciosFiltrados = computed(() => {
   if (!services.value) return [];
   return services.value.filter(s => {
-    // Normalizamos strings para búsqueda
     const tituloLower = s.titulo ? s.titulo.toLowerCase() : '';
     const ubicacionLower = s.ubicacion ? s.ubicacion.toLowerCase() : '';
 
-    // Condiciones de filtrado
     const coincideBusqueda = tituloLower.includes(searchQuery.value.toLowerCase());
     const coincideCategoria = filtroCategoria.value ? s.categoria === filtroCategoria.value : true;
     const coincideUbicacion = filtroUbicacion.value ? ubicacionLower === filtroUbicacion.value.toLowerCase() : true;
-    const coincidePrecio = s.paquetes && Array.isArray(s.paquetes) 
-      ? s.paquetes.some(p => p.precio <= precioMax.value) 
-      : true;
+    const coincidePrecio = s.paquetes && Array.isArray(s.paquetes) ? s.paquetes.some(p => p.precio <= precioMax.value) : true;
 
-    // Retorna solo los servicios que cumplen con todos los filtros
     return coincideBusqueda && coincideCategoria && coincideUbicacion && coincidePrecio;
   });
 });
 
-// Funciones para alternar visibilidad de filtros y búsqueda
+//WATCHERS
+
+// Si cambia cualquier filtro/búsqueda, regresamos a página 1
+watch([searchQuery, filtroCategoria, filtroUbicacion, precioMax], () => {
+  page.value = 1;
+});
+
+// Si por cambios en filtros queda en página vacía, ajustamos
+watch([total, pageSize], () => {
+  if (page.value > totalPages.value) {
+    page.value = totalPages.value;
+  }
+});
+
+
+// --- FUNCIONES (sin cambios) ---
 function toggleFilters() {
   showFilters.value = !showFilters.value;
 }
@@ -153,13 +211,13 @@ function toggleSearch() {
   showSearch.value = !showSearch.value;
 }
 
-// Al montar el componente cargamos servicios y categorías
+// --- CICLO DE VIDA ---
+// onMounted ahora carga todos los datos necesarios desde la API
 onMounted(() => {
   loadAllServices();
   loadAllCategories();
 });
 </script>
-
 
 <style scoped>
 .page {

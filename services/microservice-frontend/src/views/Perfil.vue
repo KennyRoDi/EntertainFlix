@@ -35,9 +35,15 @@
 
         <div class="max-w-6xl mx-auto mt-12 px-4">
           <nav class="menuPerfil flex space-x-8">
-            <router-link :to="{ name: 'paquetesPerfil' }" class="py-4 px-1 text-lg">Paquetes</router-link>
-            <router-link :to="{ name: 'resenasPerfil' }" class="py-4 px-1 text-lg">Reseñas</router-link>
-            <router-link :to="{ name: 'solicitudesPerfil' }" class="py-4 px-1 text-lg">Solicitudes</router-link>
+            <router-link :to="{ name: 'paquetesPerfil' }" class="py-4 px-1 text-lg">
+              Paquetes
+            </router-link>
+            <router-link :to="{ name: 'calendarioPerfil' }" class="py-4 px-1 text-lg">
+              Calendario
+            </router-link>
+            <router-link :to="{ name: 'solicitudesPerfil' }" class="py-4 px-1 text-lg">
+              Solicitudes
+            </router-link>
           </nav>
         </div>
 
@@ -244,9 +250,8 @@ async function aceptarSolicitud(solicitudId) {
 
     setTimeout(() => {
       const asunto = `¡Su solicitud ha sido aceptada! - ${solicitud.paquete}`;
-      const cuerpo = `Hola ${solicitud.cliente},\n\n¡Nos complace informarle que su solicitud para el paquete "${solicitud.paquete}" ha sido ACEPTADA!...\n\nSaludos cordiales,\n${
-        perfil.value?.usuario || "El equipo"
-      }`;
+      const cuerpo = `Hola ${solicitud.cliente},\n\n¡Nos complace informarle que su solicitud para el paquete "${solicitud.paquete}" ha sido ACEPTADA!...\n\nSaludos cordiales,\n${perfil.value?.usuario || "El equipo"
+        }`;
       const mailtoLink = `mailto:${solicitud.correo}?subject=${encodeURIComponent(
         asunto
       )}&body=${encodeURIComponent(cuerpo)}`;
@@ -282,9 +287,8 @@ async function rechazarSolicitud(solicitudId) {
 
     setTimeout(() => {
       const asunto = `Información sobre su solicitud - ${solicitud.paquete}`;
-      const cuerpo = `Hola ${solicitud.cliente},\n\nLamentamos informarle que no podremos aceptar su solicitud...\n\nSaludos cordiales,\n${
-        perfil.value?.usuario || "El equipo"
-      }`;
+      const cuerpo = `Hola ${solicitud.cliente},\n\nLamentamos informarle que no podremos aceptar su solicitud...\n\nSaludos cordiales,\n${perfil.value?.usuario || "El equipo"
+        }`;
       const mailtoLink = `mailto:${solicitud.correo}?subject=${encodeURIComponent(
         asunto
       )}&body=${encodeURIComponent(cuerpo)}`;
