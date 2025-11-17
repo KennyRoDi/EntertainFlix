@@ -238,7 +238,7 @@ watch(
   right: 0;
   margin-top: 8px;
   width: 260px;
-  background: white;
+  background: var(--color-menu-display);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 999;
@@ -286,12 +286,12 @@ watch(
 }
 
 .notification-item.unread {
-  background-color: #eef5ff;
+  background-color: var(--color-background-light);
   font-weight: 600;
 }
 
 .notification-item:hover {
-  background-color: #f2f2f2;
+  background-color: var(--color-solicitud);
 }
 
 .notification-title {
@@ -300,6 +300,6 @@ watch(
 
 .notification-message {
   font-size: 0.8rem;
-  color: #444;
+  color: var(--color-secondary-button-text);
 }
 </style>
