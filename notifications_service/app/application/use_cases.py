@@ -32,7 +32,7 @@ def handle_request_created_event(
     ubicacion = payload.get("ubicacion")
     solicitud_id = payload.get("id")
 
-    # La notificación va para el servicio/ofertante
+    # 🔔 La notificación va para el servicio/ofertante (el artista)
     user_id = artista
 
     title = "Nueva solicitud de agenda"
@@ -76,12 +76,12 @@ def handle_request_status_changed_event(
     """
 
     request_id = payload.get("requestId")
-    ofertant_id = payload.get("ofertantId")
-    customer_id = payload.get("customerId")
+    ofertant_id = payload.get("ofertantId")   # quien ofrece el servicio
+    customer_id = payload.get("customerId")   # quien pidió el servicio (cliente)
     new_status = payload.get("newStatus")
     reason = payload.get("reason")
 
-    # La notificación ahora va al cliente
+    # 🔔 La notificación ahora va al CLIENTE
     user_id = customer_id
 
     if new_status == "ACCEPTED":
@@ -99,8 +99,10 @@ def handle_request_status_changed_event(
         if reason:
             message += f" Motivo: {reason}"
     else:
-        # Si llega otro estado, lo tratamos como texto genérico
-        n_type = NotificationType.REQUEST_REJECTED
+        # Otros estados (ej: PENDING, IN_REVIEW, etc.)
+        # Si quieres, aquí podrías crear un NotificationType específico,
+        # por ahora lo tratamos como cambio genérico de estado.
+        n_type = NotificationType.REQUEST_REJECTED  # o crea uno como REQUEST_STATUS_CHANGED
         title = f"Cambio de estado: {new_status}"
         message = (
             f"Tu solicitud {request_id} cambió de estado a {new_status} "

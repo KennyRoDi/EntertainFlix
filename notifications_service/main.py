@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
 from app.infrastructure.api.http import create_router
 from app.infrastructure.db.repository_azure_sql import AzureSqlNotificationRepository
-from dotenv import load_dotenv
+from app.infrastructure.queue_consumer_storage import start_queue_consumers 
+
 load_dotenv()
 
 notification_repo = AzureSqlNotificationRepository()
-
 
 app = FastAPI(
     title="Notifications Service",
@@ -23,7 +25,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,     
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,3 +34,9 @@ app.add_middleware(
 router = create_router(notification_repo)
 app.include_router(router)
 
+@app.on_event("startup")
+def startup_event():
+    # Esto crea los hilos que escuchan:
+    # - decision-events  (ACCEPTED / REJECTED)
+    # - solicitudes      (creación de solicitud)
+    start_queue_consumers(notification_repo)
