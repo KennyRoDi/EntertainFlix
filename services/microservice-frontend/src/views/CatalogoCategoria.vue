@@ -2,30 +2,62 @@
   <div class="page font-sans min-h-screen">
     <Navbar />
     <section class="px-4 py-12 max-w-7xl mx-auto">
-      <h2 class="text-3xl font-bold mb-8 strong-text text-center">
-        Servicios en la categoría: {{ categoriaSeleccionada }}
+      <h2 class="text-3xl font-bold mb-8 strong-text">
+        Categoría: {{ categoriaActual || '—' }}
       </h2>
-      
+
       <div v-if="loading" class="text-center muted text-lg py-10">
-        <p>Cargando servicios...</p>
+        Cargando servicios...
       </div>
 
       <div v-else-if="error" class="text-center text-red-500 text-lg py-10">
-        <p>Ocurrió un error al cargar los servicios:</p>
+        <p>Ocurrió un error al cargar los servicios.</p>
         <p class="mt-2 text-sm">{{ error }}</p>
       </div>
 
       <div v-else>
-        <div v-if="serviciosFiltrados.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          <ServiceCard
-            v-for="serv in serviciosFiltrados"
-            :key="serv.id"
-            :servicio="serv"
-          />
+        <div v-if="totalCatServ > 0">
+          <!-- grilla -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <ServiceCard
+              v-for="serv in serviciosPaginadosDeCategoria"
+              :key="serv.id"
+              :servicio="serv"
+            />
+          </div>
+
+          <!-- mini resumen -->
+          <p class="text-sm muted mt-4">
+            Mostrando {{ serviciosPaginadosDeCategoria.length }} de {{ totalCatServ }} resultados
+          </p>
+
+          <!-- Controles de paginación (mismo HTML que Servicios) -->
+          <div class="flex items-center gap-3 justify-center mt-6 select-none">
+            <button
+              class="btn-plain px-3 py-2 rounded border"
+              @click="catServPage = Math.max(1, catServPage - 1)"
+              :disabled="catServPage === 1"
+            >
+              Anterior
+            </button>
+
+            <span class="muted">
+              Página {{ catServPage }} de {{ totalCatServPages }}
+            </span>
+
+            <button
+              class="btn-plain px-3 py-2 rounded border"
+              @click="catServPage = Math.min(totalCatServPages, catServPage + 1)"
+              :disabled="catServPage >= totalCatServPages"
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
+
+        <!-- estado vacío -->
         <div v-else class="text-center muted text-lg py-10">
-          <p>No se encontraron servicios en la categoría {{ categoriaSeleccionada }}.</p>
-          <p class="mt-2">Intenta explorar otras categorías.</p>
+          No hay servicios en esta categoría.
         </div>
       </div>
     </section>
@@ -34,28 +66,38 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
 import ServiceCard from '@/components/ServiceCard.vue';
 import { useServices } from '@/composables/useServices.js';
 
-// Llama al composable para obtener los datos y funciones
-const { services, loading, error, loadAll } = useServices();
-
 const route = useRoute();
-const categoriaSeleccionada = route.params.nombre;
+const categoriaActual = computed(() => route.params.nombre)
 
-// El 'computed' ahora filtra sobre 'services.value' que viene de la API
-const serviciosFiltrados = computed(() => {
-  return services.value ? services.value.filter(s => s.categoria === categoriaSeleccionada) : [];
-});
+const { services, loadAll, loading, error } = useServices()
+onMounted(loadAll)
 
-// Llama a loadAll() cuando el componente se monta para obtener los datos
-onMounted(() => {
-  loadAll();
-});
+const PAGE_SIZE = 4
+const catServPage = ref(1)
+
+const serviciosDeCategoria = computed(() => {
+  const arr = services.value || []
+  return arr.filter(s => s.categoria === categoriaActual.value)
+})
+
+const totalCatServ = computed(() => serviciosDeCategoria.value.length)
+const totalCatServPages = computed(() =>
+  Math.max(1, Math.ceil(totalCatServ.value / PAGE_SIZE))
+)
+
+const serviciosPaginadosDeCategoria = computed(() => {
+  const start = (catServPage.value - 1) * PAGE_SIZE
+  return serviciosDeCategoria.value.slice(start, start + PAGE_SIZE)
+})
+
+watch([categoriaActual, services], () => { catServPage.value = 1 })
 </script>
 
 <style scoped>

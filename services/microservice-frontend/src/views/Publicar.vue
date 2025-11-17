@@ -67,29 +67,32 @@ import { ref, reactive } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
 
+// --- Estado principal del formulario ---
 const form = reactive({
-    titulo: '',
-    eslogan: '',
-    quien_soy: '',
-    que_hago: '',
-    imagenes: {
+    titulo: '',           // Título del servicio
+    eslogan: '',          // Eslogan promocional
+    quien_soy: '',        // Descripción personal
+    que_hago: '',         // Descripción de lo que se ofrece
+    imagenes: {           // Imágenes asociadas
         header: null,
     },
-    paquetes: [],
+    paquetes: [],         // Lista de paquetes agregados
 })
 
+// --- Manejo de imágenes ---
 const handleFileChange = (event, imageType) => {
-    form.imagenes[imageType] = event.target.files[0];
+    form.imagenes[imageType] = event.target.files[0]
 }
 
+// --- Gestión de paquetes ---
 const addPackage = () => {
     form.paquetes.push({
-        nombre: '',
-        descripcion: '',
-        precio: '',
-        imagen: null,
-        video_youtube: '',
-        detalles: [],
+        nombre: '',           // Nombre del paquete
+        descripcion: '',      // Detalle del paquete
+        precio: '',           // Precio del paquete
+        imagen: null,         // Imagen opcional
+        video_youtube: '',    // Video asociado
+        detalles: [],         // Lista de extras o detalles
     })
 }
 
@@ -97,10 +100,12 @@ const removePackage = (index) => {
     form.paquetes.splice(index, 1)
 }
 
+// --- Envío del formulario ---
 const handleSubmit = () => {
     console.log('Form data submitted:', form)
 }
 </script>
+
 
 <style scoped>
 .page {
@@ -125,16 +130,13 @@ const handleSubmit = () => {
 
 .text-form-label {
     color: var(--color-text-light);
-    /* Using a slightly lighter text color for labels */
     transition: color 180ms ease;
 }
 
 .input-field {
     background-color: var(--color-body-bg);
-    /* Use body background for the field itself */
     color: var(--color-text);
     border: 1px solid var(--color-text2);
-    /* Using text2 variable for a subtle border */
     padding: 0.5rem 0.75rem;
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
     outline: none;
@@ -142,9 +144,7 @@ const handleSubmit = () => {
 
 .input-field:focus {
     border-color: var(--color-header-bg);
-    /* Focus color from a main theme color */
     box-shadow: 0 0 0 3px rgba(var(--color-header-bg), 0.2);
-    /* Soft shadow on focus */
 }
 
 .package-card {

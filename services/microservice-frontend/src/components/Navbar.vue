@@ -13,6 +13,11 @@
       />
     </a>
     <nav class="header-nav">
+    <NotificationsBell
+      v-if="usuario"
+      :user-id="usuario.usuario || usuario.nombre"
+    />
+
       <MenuDesplegable :usuario="usuario" @cerrar-sesion="cerrarSesion" />
     </nav>
   </header>
@@ -23,6 +28,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth.js";
 import MenuDesplegable from "./Menu.vue";
+import NotificationsBell from "./NotificationsBell.vue";
 
 const router = useRouter();
 const { usuario, logout } = useAuth();

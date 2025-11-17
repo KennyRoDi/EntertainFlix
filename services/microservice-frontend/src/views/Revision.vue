@@ -68,13 +68,11 @@ import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
 import { useServices } from '@/composables/useServices.js';
 
-// 1. Se usa el composable para la carga inicial de datos
 const { services, loadAll, loading, error } = useServices();
 
 const serviciosPendientes = ref([]);
 const serviciosAprobados = ref([]);
 
-// --- Funciones de Utilidad (sin cambios, siguen usando localStorage) ---
 function guardarServiciosPendientes(servs) {
     localStorage.setItem('serviciosPendientesRevision', JSON.stringify(servs));
 }
@@ -83,13 +81,11 @@ function guardarServiciosAprobados(servs) {
     localStorage.setItem('approvedServices', JSON.stringify(servs));
 }
 
-// 2. La función de inicialización ahora es 'async' para poder llamar a la API
 async function inicializarServicios() {
     const storedPendientes = localStorage.getItem('serviciosPendientesRevision');
     if (storedPendientes) {
         serviciosPendientes.value = JSON.parse(storedPendientes);
     } else {
-        // 3. Si no hay nada en localStorage, usa la API como fuente de datos inicial
         await loadAll();
         serviciosPendientes.value = services.value.filter(serv => serv.estado === 'pendiente-revision');
         guardarServiciosPendientes(serviciosPendientes.value);
@@ -103,7 +99,6 @@ async function inicializarServicios() {
     }
 }
 
-// --- Lógica de Aceptar/Rechazar (sin cambios, sigue usando localStorage) ---
 function aceptarServicio(servicio) {
     const servicioAceptado = { ...servicio, estado: 'aprobado' };
     serviciosAprobados.value.push(servicioAceptado);
@@ -129,7 +124,6 @@ function rechazarServicio(servicio) {
     alert(`Servicio "${servicio.titulo}" rechazado.`);
 }
 
-// 4. Restaurar ahora también es 'async'
 async function restaurarServiciosRevision() {
     if (confirm('¿Estás seguro de que quieres restaurar la lista de servicios pendientes?')) {
         localStorage.removeItem('serviciosPendientesRevision');
@@ -139,15 +133,12 @@ async function restaurarServiciosRevision() {
     }
 }
 
-// --- Ciclo de Vida ---
-// 5. onMounted ahora es 'async'
 onMounted(async () => {
     await inicializarServicios();
 });
 </script>
 
 <style scoped>
-/* Page wrapper uses theme variables from themes.css */
 .page {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -155,13 +146,11 @@ onMounted(async () => {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
-/* Muted text (subtítulos, detalles pequeños) */
 .muted {
   color: var(--color-text-light);
   transition: color 180ms ease;
 }
 
-/* Restore button (header action) */
 .restore-btn {
   background-color: var(--color-background-light);
   color: var(--color-text);
@@ -171,12 +160,10 @@ onMounted(async () => {
   opacity: 0.95;
 }
 
-/* Icon inside restore button should match text color */
 .restore-btn .icon {
   color: currentColor;
 }
 
-/* Card styles for pendientes */
 .card-pending {
   background-color: var(--color-background-light);
   color: var(--color-text);
@@ -184,7 +171,6 @@ onMounted(async () => {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-/* Card styles for aprobados */
 .card-approved {
   background-color: var(--color-body-bg);
   color: var(--color-text);
@@ -192,12 +178,10 @@ onMounted(async () => {
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-/* Images */
 .img-cover {
   object-fit: cover;
 }
 
-/* Links / small CTAs */
 .link-cta {
   color: var(--color-primary-button-bg);
   text-decoration: none;
@@ -207,7 +191,6 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
-/* Accept / Reject buttons (text buttons) */
 .accept-btn {
   color: #16a34a;
   background: transparent;
@@ -221,7 +204,6 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-/* Badge aprobado */
 .badge-approved {
   display: inline-block;
   background-color: rgba(57, 194, 15, 0.849); 
@@ -231,7 +213,6 @@ onMounted(async () => {
   border-radius: 9999px;
 }
 
-/* Divider */
 .divider {
   border: none;
   height: 1px;
@@ -240,12 +221,10 @@ onMounted(async () => {
   margin: 3rem 0;
 }
 
-/* Headings ensure contrast */
 h2, h3 {
   color: var(--color-text);
 }
 
-/* Small accessibility tweaks */
 button:focus, a:focus {
   outline: 3px solid rgba(0,0,0,0.06);
   outline-offset: 2px;
